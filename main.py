@@ -1,4 +1,4 @@
-from stand.server.cli.server import run_server
+from stand.server.gui import run_server
 from stand.server.utils import find_games, find_agents
 
 

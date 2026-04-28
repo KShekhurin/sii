@@ -26,7 +26,7 @@ def load_all_submodules(package):
 
     return modules
 
-def find_games():
+def find_games() -> list[type]:
     games = []
     modules = load_all_submodules(importlib.import_module("stand.games"))
 
@@ -41,7 +41,7 @@ def find_games():
                 games.append(obj)
     return games
 
-def find_agents():
+def find_agents() -> list[type]:
     agents = []
     modules = load_all_submodules(importlib.import_module("stand.agents"))
 

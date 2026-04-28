@@ -80,10 +80,9 @@ class AbstractWCLIRenderer(AbstractRenderer):
 
     def display(self) -> None:
         if self.is_first_msg:
-            self.cli_display.print_line("[To go to nex turn press ENTER]")
+            self.cli_display.print_line("[To go to next step press Next step]")
             self.is_first_msg = False
 
-        value = self.cli_display.read_line(">>> ")
         self.sub_display()
 
     @abstractmethod
