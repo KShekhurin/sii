@@ -6,6 +6,24 @@ from abc import ABC, abstractmethod
 
 
 class Agent(ABC):
+    """
+    Базовый абстрактный класс для всех агентов.
+
+    Агент принимает решение о ставке на основе текущего состояния игры (context).
+    Агент НЕ управляет очками и не изменяет состояние игры напрямую.
+
+    Методы:
+    -------
+    make_bid(context: dict) -> int
+        Должен быть реализован в наследниках. Возвращает ставку агента.
+
+    clip_bid(bid: int, my_points: int) -> int
+        Ограничивает ставку допустимыми значениями:
+        - не меньше 0
+        - не больше 30
+        - не больше доступных очков
+    """
+
     def __init__(self, name: str):
         self.name = name
 
@@ -28,6 +46,21 @@ class Agent(ABC):
 
 
 class MinimaxAgent(Agent):
+    """
+    Агент, использующий стратегию minimax.
+
+    Перебирает все возможные ставки и выбирает ту, которая максимизирует
+    минимально возможный выигрыш (worst-case сценарий).
+
+    Предположения:
+    - стоимость предмета аппроксимируется как 20 (математическое ожидание)
+    - оппонент может выбрать любую ставку
+
+    Стратегия:
+    - для каждой своей ставки оценивается худший исход
+    - выбирается ставка с максимальным худшим результатом
+    """
+     
     def make_bid(self, context: dict) -> int:
         my_points = context['my_points']
         opponent_points = context['opponent_points']
@@ -60,6 +93,20 @@ class MinimaxAgent(Agent):
     
 
 class BayesianAgent(Agent):
+    """
+    Агент, оценивающий поведение оппонента через статистику.
+
+    Использует:
+    - среднее значение ставок оппонента
+    - стандартное отклонение
+
+    Предполагает нормальное распределение ставок оппонента и оценивает
+    вероятность выигрыша для разных ставок.
+
+    Стратегия:
+    - оценивает вероятность победы через CDF нормального распределения
+    - выбирает ставку с максимальным ожидаемым выигрышем (EV)
+    """
     def make_bid(self, context: dict) -> int:
         my_points = context['my_points']
         history = context['history']
@@ -94,6 +141,17 @@ class BayesianAgent(Agent):
 
 
 class PunisherAgent(Agent):
+    """
+    Агент с реактивной и частично случайной стратегией.
+
+    Поведение:
+    - если оппонент делает агрессивную ставку (>15), агент отвечает ещё более высокой ставкой
+    - в остальных случаях действует случайно
+
+    Цель:
+    - наказывать агрессивные стратегии
+    - быть непредсказуемым
+    """
     def make_bid(self, context: dict) -> int:
         my_points = context['my_points']
         history = context['history']
@@ -113,159 +171,21 @@ class PunisherAgent(Agent):
         else:
             return self.clip_bid(random.randint(15, 25), my_points)
 
-# class QLearningAgent(Agent):
-#     shared_q = {}
-
-#     def __init__(self, name):
-#         self.name = name
-#         self.q = QLearningAgent.shared_q
-#         self.alpha = 0.3  # Агрессивное обучение
-#         self.gamma = 0.7  # Меньше смотрим в будущее (игра короткая)
-#         self.epsilon = 0.2
-
-#         # Сокращаем выбор до 7 вариантов (шаг 5)
-#         self.possible_actions = [0, 5, 10, 15, 20, 25, 30]
-
-#         self.last_state = None
-#         self.last_action = None
-
-#     def _get_state(self, context):
-#         # Максимально простое состояние: только 3 фазы игры
-#         # (начало, середина, конец)
-#         return context['round'] // 17
-
-#     def _compute_reward(self, context):
-#         history = context['history']
-#         if not history: return None
-        
-#         last = history[-1]
-#         # Если выиграли, профит = цена - ставка. 
-#         # Если проиграли, профит = 0 (мы ничего не потеряли)
-#         if last['my_bid'] > last['opponent_bid']:
-#             return last['value'] - last['my_bid']
-#         else: return last['opponent_bid'] - last['value']
-#         return 0
-
-#     def make_bid(self, context: dict) -> int:
-#         state = self._get_state(context)
-#         reward = self._compute_reward(context)
-
-#         # ОТЛАДКА: Проверяем, заходим ли мы в обновление
-#         if reward is not None:
-#             if self.last_state is not None:
-#                 print(f"Updating Q for {self.last_state} with reward {reward}")
-#                 self._update_q(self.last_state, self.last_action, reward, state)
-#             else:
-#                 print("First round: no last_state yet.")
-#         else:
-#             print("Warning: Reward is None! Check history keys.")
-
-#         # ACTION SELECTION
-#         qs = [self.q.get((state, a), 0) for a in self.possible_actions]
-#         #print(qs)
-#         # Если всё ещё нули, выведем состояние, чтобы понять почему
-#         if all(v == 0 for v in qs):
-#             pass
-#            # print(f"State {state} is completely new or all Qs are 0")
-
-#         if random.random() < self.epsilon:
-#             action = random.choice(self.possible_actions)
-#         else:
-#             max_q = max(qs)
-#             if max_q == 0:
-#                 action = random.choice(self.possible_actions)
-#             else:
-#                 best_actions = [a for a, q in zip(self.possible_actions, qs) if q == max_q]
-#                 action = random.choice(best_actions)
-
-#         self.last_state = state
-#         self.last_action = action
-#         return min(action, context['my_points'])
-    
-#     def _update_q(self, state, action, reward, next_state):
-#         old_q = self.q.get((state, action), 0)
-#         max_future = max([self.q.get((next_state, a), 0) for a in self.possible_actions], default=0)
-        
-#         # Обновляем значение
-#         self.q[(state, action)] = old_q + self.alpha * (reward + self.gamma * max_future - old_q)
-
-
-# class QLearningAgent(Agent):
-#     def __init__(self, name):
-#         super().__init__(name)
-
-#         self.q = {}
-#         self.alpha = 0.1
-#         self.gamma = 0.9
-#         self.epsilon = 0.2
-
-#         self.actions = list(range(0, 31))
-
-#         self.last_state = None
-#         self.last_action = None
-
-#     def _get_state(self, context):
-#         return (
-#             context['my_points'] // 10,
-#             context['opponent_points'] // 10
-#         )
-
-#     def _compute_reward(self, context):
-#         """Восстанавливаем reward из последнего раунда"""
-#         history = context['history']
-
-#         if not history:
-#             return None
-
-#         last = history[-1]
-
-#         my_bid = last['my_bid']
-#         opp_bid = last['opponent_bid']
-#         value = last['value']
-        
-#         if my_bid > opp_bid:
-#             return value - my_bid
-#         else:
-#             return opp_bid - value
-
-#     def make_bid(self, context: dict) -> int:
-#         state = self._get_state(context)
-
-#         # --- LEARNING STEP ---
-#         reward = self._compute_reward(context)
-
-#         if reward is not None and self.last_state is not None:
-#             self._update_q(self.last_state, self.last_action, reward, state)
-
-#         # --- ACTION SELECTION ---
-#         if random.random() < self.epsilon:
-#             action = random.choice(self.actions)
-#         else:
-#             qs = [self.q.get((state, a), 0) for a in self.actions]
-#             max_q = max(qs)
-#             best_actions = [a for a, q in zip(self.actions, qs) if q == max_q]
-#             print(qs)
-#             action = random.choice(best_actions)
-
-#         self.last_state = state
-#         self.last_action = action
-
-#         return self.clip_bid(action, context['my_points'])
-
-#     def _update_q(self, state, action, reward, next_state):
-#         max_future = max(
-#             [self.q.get((next_state, a), 0) for a in self.actions],
-#             default=0
-#         )
-
-#         old = self.q.get((state, action), 0)
-
-#         self.q[(state, action)] = (
-#             old + self.alpha * (reward + self.gamma * max_future - old)
-#         )        
 
 
 class EVAgent(Agent):
+    """
+    Агент, ориентированный на ожидаемую ценность (Expected Value).
+
+    Предполагает:
+    - средняя стоимость предмета ≈ 20
+
+    Стратегия:
+    - выбирает случайную ставку в диапазоне [10, 20]
+    - избегает переплаты (ставок > 20)
+
+    Простой и стабильный baseline-агент.
+    """
     def make_bid(self, context: dict) -> int:
         my_points = context['my_points']
 
@@ -279,6 +199,18 @@ class EVAgent(Agent):
 
 
 class AdaptiveAgent(Agent):
+    """
+    Адаптивный агент, изменяющий стратегию в зависимости от ситуации.
+
+    Поведение:
+    - если проигрывает по очкам → увеличивает ставки (агрессия)
+    - если выигрывает → снижает ставки (осторожность)
+    - в последних раундах → становится более агрессивным
+
+    Учитывает:
+    - текущий счёт
+    - номер раунда
+    """
     def make_bid(self, context: dict) -> int:
         my_points = context['my_points']
         opponent_points = context['opponent_points']
@@ -300,6 +232,14 @@ class AdaptiveAgent(Agent):
     
 
 class MirrorAgent(Agent):
+    """
+    Агент, копирующий поведение оппонента.
+
+    Поведение:
+    - в первом раунде делает случайную ставку
+    - далее повторяет ставку оппонента из предыдущего раунда
+
+    """
     def make_bid(self, context: dict) -> int:
         if context['round'] == 1:
             return random.randint(1, context['my_points'])
@@ -309,6 +249,14 @@ class MirrorAgent(Agent):
 
 
 class HumanAgent(Agent):
+    """
+    Агент для взаимодействия с человеком через консоль.
+
+    Поведение:
+    - запрашивает ставку у пользователя
+    - валидирует ввод
+    - не допускает отрицательные ставки или превышение доступных очков
+    """
     def make_bid(self, context: dict) -> int:
         while True:
             try:
@@ -325,11 +273,22 @@ class HumanAgent(Agent):
                 print("Введите число.")
 
 class RandomAgent(Agent):
+    """
+    Агент со случайной стратегией.
+
+    Поведение:
+    - выбирает случайную ставку в диапазоне [0, 30]
+    """
     def make_bid(self, context: dict) -> int:
         return self.clip_bid(random.randint(0, 30), context['my_points'])
     
 
 class DoNothingAgent(Agent):
+    """
+    Агент, который никогда не делает ставку.
+
+    Всегда возвращает 0.
+    """
     def make_bid(self, context: dict) -> int:
         return 0    
     
