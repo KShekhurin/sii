@@ -37,7 +37,8 @@ def find_games() -> list[type]:
             if (isinstance(obj, type)
                     and hasattr(obj, "__IS_GAME__")
                     and issubclass(obj, AbstractGame)
-                    and obj is not AbstractGame):
+                    and obj is not AbstractGame
+                    and obj not in games):
                 games.append(obj)
     return games
 

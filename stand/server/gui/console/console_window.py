@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QApplication, QHBoxLayout, QMainWindow, QMenuBar,
     QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
     QTextBrowser, QVBoxLayout, QWidget)
 
-
+from stand.games.bid_game.WCLIRenderer import BidWCLIRenderer
 from stand.games.test_game.echo_game import EchoWCLIRenderer
 from stand.server.server_api import AbstractCLIDisplay, AbstractGame, AbstractGameAgent, AbstractRenderer, game
 from stand.server.utils import run
@@ -133,7 +133,7 @@ class ConsoleWindow(QMainWindow):
         game.agents = agents
         game.setup()
 
-        renderer = EchoWCLIRenderer(self.display, game)
+        renderer = BidWCLIRenderer(self.display, game)
 
         self.display_thread_worker.set_game(game)
         self.display_thread_worker.set_renderer(renderer)
