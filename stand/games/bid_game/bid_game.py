@@ -130,6 +130,10 @@ class BidGame(AbstractGame):
                     self.rise_error("New bid cannot be less then previous one",
                                     self.bidding_agent_id)
                     return
+                elif value > self.info["agents"][self.bidding_agent_id]["total"]:
+                    self.rise_error("Bid cannot exceed players total",
+                                    self.bidding_agent_id)
+                    return
                 else:
                     self.last_bid = value
                     self.bidding_lead_id = self.bidding_agent_id

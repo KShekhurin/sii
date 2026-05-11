@@ -9,14 +9,20 @@ def game(cls):
     return cls
 
 #server interfaces for module implementation
+class AbstractInput(ABC):
+    @abstractmethod
+    def read_line(self, prefix: str) -> str:
+        pass
+
 class AbstractGameAgent(ABC):
     '''any modular game agent must inherit this class and overwrite params below'''
     AGENT_NAME: str = None
     GAME_NAME: str = None
     GAME_VERSION: str = None
 
-    def __init__(self):
+    def __init__(self, inpt: AbstractInput = None) -> None:
         self.id = -1
+        self.input = inpt
 
     def set_id(self, id: int) -> None:
         self.id = id

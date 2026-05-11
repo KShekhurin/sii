@@ -180,27 +180,35 @@ class Ui_MainWindow(MainView):
         self.run_cli_btn.setText(QCoreApplication.translate("MainWindow", u"Run CLI", None))
         self.run_gui_btn.setText(QCoreApplication.translate("MainWindow", u"Run GUI", None))
 
-    def show_cli_window(self, game: AbstractGame, agents: list[AbstractGameAgent]):
-        window = ConsoleWindow(game, agents)
+    def show_cli_window(self, game: AbstractGame, agents_t: list[type]):
+        window = ConsoleWindow(game, agents_t)
         window.show()
 
         self.active_sessions.append(window)
 
     def on_selected_game_item_changed(self, item):
+        self.agents_list_view.blockSignals(True)
         if item.checkState() == Qt.Checked:
-            for row in range(self.agents_list_view.count()):
-                citem = self.agents_list_view.item(row)
-                if citem != item:
+            new_row = self.games_list_view.row(item)
+            for row in range(self.games_list_view.count()):
+                citem = self.games_list_view.item(row)
+                if new_row != row:
                     citem.setCheckState(Qt.Unchecked)
-            self.presenter.on_selected_game_changed(self.games_list_view.row(item))
+            self.games_list_view.item(new_row).setCheckState(Qt.Checked)
+            self.presenter.on_selected_game_changed(new_row)
         else:
             self.presenter.on_game_unselected()
+        self.agents_list_view.blockSignals(False)
 
     def on_selected_agent_item_changed(self, item):
+        self.agents_list_view.blockSignals(True)
         if item.checkState() == Qt.Checked:
-            self.presenter.on_agent_added(self.agents_list_view.row(item))
+            new_row = self.agents_list_view.row(item)
+            self.presenter.on_agent_added(new_row)
         else:
-            self.presenter.on_agent_removed(self.agents_list_view.row(item))
+            new_row = self.agents_list_view.row(item)
+            self.presenter.on_agent_removed(new_row)
+        self.agents_list_view.blockSignals(False)
 
     def get_selected_game_id(self) -> Optional[int]:
         for row in range(self.games_list_view.count()):

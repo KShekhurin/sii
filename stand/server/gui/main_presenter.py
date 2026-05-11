@@ -70,5 +70,5 @@ class MainPresenter:
                                    for agent in self.agents])
     def start_cli_session(self):
         self.main_view.show_cli_window(
-            self.selected_game(), list(map(lambda agent_id: self.agents[agent_id](), self.selected_agents))
+            self.selected_game(), list(map(lambda agent_id: self.agents[agent_id], self.selected_agents))
         )

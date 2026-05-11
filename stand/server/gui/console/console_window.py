@@ -10,16 +10,27 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QMainWindow, QMenuBar,
-    QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
-    QTextBrowser, QVBoxLayout, QWidget)
+                               QPushButton, QSizePolicy, QSpacerItem, QStatusBar,
+                               QTextBrowser, QVBoxLayout, QWidget, QInputDialog)
 
 from stand.games.bid_game.WCLIRenderer import BidWCLIRenderer
-from stand.server.server_api import AbstractCLIDisplay, AbstractGame, AbstractGameAgent, AbstractRenderer, game
+from stand.server.server_api import AbstractCLIDisplay, AbstractGame, AbstractGameAgent, AbstractRenderer, game, \
+    AbstractInput
 from stand.server.utils import run
 
 class ExecCodes(Enum):
     EXIT = 1
     NEXT_STEP = 2
+
+class InputDialogue(AbstractInput):
+    def __init__(self, worker: TerminalWorker, input_queue: Queue):
+        self.input_queue = input_queue
+        self.worker = worker
+
+    def read_line(self, prefix: str) -> str:
+        self.worker.need_input.emit(prefix)
+        result = self.input_queue.get()
+        return result
 
 class TerminalDisplay(AbstractCLIDisplay):
     def __init__(self, terminal_worker: TerminalWorker):
@@ -34,18 +45,23 @@ class TerminalDisplay(AbstractCLIDisplay):
 
 class TerminalWorker(QObject):
     append_text = Signal(str)
+    need_input = Signal(str)
 
     def __init__(self, queue: Queue):
         super().__init__()
         self.game = None
         self.renderer = None
         self.queue = queue
+        self.input_dialogue = None
 
     def set_game(self, game: AbstractGame):
         self.game = game
 
     def set_renderer(self, renderer: AbstractRenderer):
         self.renderer = renderer
+
+    def set_input(self, input_dialogue: InputDialogue):
+        self.input_dialogue = input_dialogue
 
     @Slot()
     def run(self):
@@ -115,7 +131,7 @@ class Ui_ConsoleWindow(object):
 
 
 class ConsoleWindow(QMainWindow):
-    def __init__(self, game: AbstractGame, agents: list[AbstractGameAgent]):
+    def __init__(self, game: AbstractGame, agents: list[type]):
         super().__init__()
         self.ui = Ui_ConsoleWindow()
         self.ui.setupUi(self)
@@ -123,21 +139,25 @@ class ConsoleWindow(QMainWindow):
         self.ui.next_step_btn.clicked.connect(self.on_next_step_btn_click)
 
         self.msg_queue = Queue()
+        self.input_queue = Queue()
         self.on_next_step_btn_click()
 
         self.display_thread_worker = TerminalWorker(self.msg_queue)
         self.display_thread = QThread()
         self.display = TerminalDisplay(self.display_thread_worker)
+        self.input = InputDialogue(self.display_thread_worker, self.input_queue)
 
-        game.add_agents(agents)
+        game.add_agents(map(lambda a: a(self.input), agents))
         game.setup()
 
         renderer = game.build_cli_requirements(self.display)
 
         self.display_thread_worker.set_game(game)
         self.display_thread_worker.set_renderer(renderer)
+        self.display_thread_worker.set_input(self.input)
 
         self.display_thread_worker.append_text.connect(self.on_text_print_msg)
+        self.display_thread_worker.need_input.connect(self.on_request_show_dialogue)
         self.display_thread_worker.moveToThread(self.display_thread)
         self.display_thread.started.connect(self.display_thread_worker.run)
         self.display_thread.start()
@@ -152,6 +172,15 @@ class ConsoleWindow(QMainWindow):
 
     def on_text_print_msg(self, text: str):
         self.ui.console_textbrws.append(text)
+
+    def on_request_show_dialogue(self, prefix: str):
+        text, ok = QInputDialog.getText(
+            self,
+            "User input",  # window title
+            prefix  # label text
+        )
+
+        self.input_queue.put(text)
 
     def on_next_step_btn_click(self):
         self.msg_queue.put(ExecCodes.NEXT_STEP)
