@@ -24,23 +24,6 @@ class AbstractGameAgent(ABC):
     def get_id(self) -> int:
         return self.id
 
-class AbstractGame(ABC):
-    '''any game implementation must inherit this class and overwrite params below'''
-    GAME_NAME: str = None
-    GAME_VERSION: str = None
-
-    @abstractmethod
-    def setup(self) -> None:
-        pass
-
-    @abstractmethod
-    def make_step(self) -> None:
-        pass
-
-    @abstractmethod
-    def is_finished(self) -> bool:
-        pass
-
 class AbstractRenderer(ABC):
     '''!FOR INNER USAGE, DO NOT USE!
     Abstraction for wcli and gui renderers
@@ -91,3 +74,28 @@ class AbstractWCLIRenderer(AbstractRenderer):
 
     def is_ready(self) -> bool: #the virtual console displays in one cycle so no need to wait
         return self.ready
+
+class AbstractGame(ABC):
+    '''any game implementation must inherit this class and overwrite params below'''
+    GAME_NAME: str = None
+    GAME_VERSION: str = None
+
+    @abstractmethod
+    def setup(self) -> None:
+        pass
+
+    @abstractmethod
+    def make_step(self) -> None:
+        pass
+
+    @abstractmethod
+    def is_finished(self) -> bool:
+        pass
+
+    @abstractmethod
+    def add_agents(self, agents: list[AbstractGameAgent]):
+        pass
+
+    @abstractmethod
+    def build_cli_requirements(self, cli_display: AbstractCLIDisplay) -> AbstractWCLIRenderer:
+        pass

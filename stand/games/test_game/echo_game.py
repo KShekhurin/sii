@@ -87,17 +87,9 @@ class EchoGame(AbstractGame):
         for i in range(self.get_agents_cnt()):
             self.agents[i].set_id(i)
 
-class EchoWCLIRenderer(AbstractWCLIRenderer):
-    def __init__(self, cli_display: AbstractCLIDisplay, game: EchoGame):
-        super().__init__(cli_display)
-        self.game = game
-        self.events_cnt = 0
+    def add_agents(self, agents: list[AbstractGameAgent]):
+        self.agents.extend(agents)
 
-    def sub_display(self) -> None:
-        event_chain = self.game.events_chain
-        if self.events_cnt == len(event_chain):
-            return
-
-        self.events_cnt = len(event_chain)
-        for event in event_chain[self.events_cnt-1:]:
-            self.cli_display.print_line(f"Agent {event.agent.AGENT_NAME}({event.agent.get_id()}) responded: {event.message}")
+    def build_cli_requirements(self, cli_display: AbstractCLIDisplay) -> AbstractWCLIRenderer:
+        from stand.games.test_game.WCLIRenderer import EchoWCLIRenderer
+        return EchoWCLIRenderer(cli_display, self)

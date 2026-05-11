@@ -36,5 +36,13 @@ class BidWCLIRenderer(AbstractWCLIRenderer):
                 self.cli_display.print_line(
                     f"Agent {self.get_agent_name_by_id(id)}({id}) paid {value} and won {prize}"
                 )
+                self.print_results_after_round(event)
             case ErrorEvent(agent_id=id, message=message):
                 self.cli_display.print_line(f"ERROR({id}): {message}")
+
+    def print_results_after_round(self, result: BidResult):
+        self.cli_display.print_line(f"Results after ROUND {result.round_number}:")
+
+        for agent_id in range(len(self.game.agents)):
+            self.cli_display.print_line(
+                f"{self.get_agent_name_by_id(agent_id)}: {self.game.info["agents"][agent_id]["total"]}")

@@ -1,6 +1,5 @@
 import importlib.util
 from stand import games
-from stand.games.test_game.echo_game import EchoWCLIRenderer
 from stand.server.server_api import *
 from pkgutil import walk_packages
 

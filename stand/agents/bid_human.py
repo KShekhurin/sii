@@ -9,7 +9,6 @@ class BidAgentHuman(BidAgent):
 
     def __init__(self):
         super().__init__()
-        pass
 
     def on_state_change(self, state: GameStates):
         pass

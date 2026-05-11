@@ -17,6 +17,7 @@ class NewBidEvent:
 
 @dataclass
 class BidResult:
+    round_number: int
     winner_id: Optional[int]
     value_bet: Optional[int]
     prize: Optional[int]
