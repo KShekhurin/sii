@@ -7,7 +7,7 @@
 Документация и информация о проекте: 
 
 ## Альтернативы
-[Colosseum](https://vk.com/away.php?to=https%3A%2F%2Fgithub.com%2Fjw-mans%2Fbot-colosseum&utf=1) —
+[Colosseum](https://github.com/jw-mans/bot-colosseum) —
 консольный сервер с фокусом на общение агентов потоками ввода/вывода
 
 ## Использование
