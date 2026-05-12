@@ -13,12 +13,14 @@ CTRL - отвечает за контроль агентов, хода игры,
 
 ## 4. Подробная инструкция по написанию собственных агентов
 **Агент - это функция. Вот как выглядит пример агента:**
+``` 
 def Pexample(state, last_result):
-    if state['phase'] == 'placement':
+    if state['phase'] == 'placement': 
         return random_placement() # определенная в коде вспомогательная функция случайной расстановки
     else:
         available = [(r,c) for r in range(10) for c in range(10) if (r,c) not in state['shots']]
-        return random.choice(available) # 
+        return random.choice(available) 
+```
 где state - словарь вида {'board': list(list(int)), 'shots': set(tuple[int,int]), 'ships': list(dict), 'phase': str}, причем ships - свои корабли, board - состояние доски (инты заданы по правилам - см. вспомогательные константы)
 last_result - словарь вида {'status': str, 'coords': tuple[int, int]}. Статус может быть как статусом клетки, в которую в прошлый раз выстрелил агент, а может быть и статусом ошибки, связанной с клеткой.
 В фазе расстановки возвращаем list(list(int)) - всю доску.
