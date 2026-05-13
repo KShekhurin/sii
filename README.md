@@ -138,7 +138,8 @@ params	dict	Исходные параметры игры: a, b, n, m, initial_ba
 class RandomBot(Player):
     """Ставит случайную сумму от 0 до b."""
     def make_decision(self, state: Dict[str, Any]) -> int:
-        return random.randint(0, state['params']['b'])```
+        return random.randint(0, state['params']['b'])
+```
 4.3 Бот с памятью
 Если боту нужно хранить историю между раундами, переопределите reset():
 
@@ -150,7 +151,8 @@ class AdaptiveBot(Player):
     def make_decision(self, state):
         # Сохраняем информацию о раунде
         self.history.append(state['bids'])
-        # ... стратегия на основе всей истории```
+        # ... стратегия на основе всей истории
+```
 4.4 Регистрация в меню
 Чтобы ваш бот появился в списке выбора, добавьте его в реестр BOTS_REGISTRY:
 
@@ -158,7 +160,8 @@ class AdaptiveBot(Player):
 BOTS_REGISTRY = {
     ...
     "my_bot": MyCleverBot,
-}```
+}
+```
 Теперь при запуске игры можно будет набрать my_bot.
 
 5. Запуск
@@ -169,5 +172,6 @@ game = AuctionGame(
     [MyCleverBot(), AverageBot()],
     a=10, b=20, n=5, m=3, s=500
 )
-winner = game.run()```
+winner = game.run()
+```
 Логи раундов будут выведены в консоль. Анализируйте, как менялся баланс, и дорабатывайте стратегию.
