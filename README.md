@@ -77,7 +77,7 @@ class Game(ABC):
     @abstractmethod
     def run(self) -> int:
         """Запустить игру и вернуть индекс победителя (0, 1 или -1)."""
-        ...
+        ...```
 Эти классы не привязаны к конкретной игре, что позволяет на их основе создавать любые пошаговые противостояния (крестики-нолики, дилемма заключённого и т.д.).
 
 2.2 Конкретная игра AuctionGame
@@ -133,15 +133,15 @@ params	dict	Исходные параметры игры: a, b, n, m, initial_ba
 Важно: bids внутри подраунда не содержит ставку ни вашу, ни соперника в этом подраунде. Игроки принимают решение одновременно, видя только историю предыдущих подраундов.
 
 4.2 Пример бота
-python
+```python
 class RandomBot(Player):
     """Ставит случайную сумму от 0 до b."""
     def make_decision(self, state: Dict[str, Any]) -> int:
-        return random.randint(0, state['params']['b'])
+        return random.randint(0, state['params']['b'])```
 4.3 Бот с памятью
 Если боту нужно хранить историю между раундами, переопределите reset():
 
-python
+```python
 class AdaptiveBot(Player):
     def reset(self):
         self.history = []
@@ -149,24 +149,24 @@ class AdaptiveBot(Player):
     def make_decision(self, state):
         # Сохраняем информацию о раунде
         self.history.append(state['bids'])
-        # ... стратегия на основе всей истории
+        # ... стратегия на основе всей истории```
 4.4 Регистрация в меню
 Чтобы ваш бот появился в списке выбора, добавьте его в реестр BOTS_REGISTRY:
 
-python
+```python
 BOTS_REGISTRY = {
     ...
     "my_bot": MyCleverBot,
-}
+}```
 Теперь при запуске игры можно будет набрать my_bot.
 
 5. Запуск
 Вы можете запустить игру между своим ботом и одним из встроенных прямо в коде:
 
-python
+```python
 game = AuctionGame(
     [MyCleverBot(), AverageBot()],
     a=10, b=20, n=5, m=3, s=500
 )
-winner = game.run()
+winner = game.run()```
 Логи раундов будут выведены в консоль. Анализируйте, как менялся баланс, и дорабатывайте стратегию.
